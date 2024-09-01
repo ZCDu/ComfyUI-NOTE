@@ -73,6 +73,7 @@ class PromptServer():
         mimetypes.init()
         mimetypes.types_map['.js'] = 'application/javascript; charset=utf-8'
 
+        # NOTE: 有用户管理
         self.user_manager = UserManager()
         self.internal_routes = InternalRoutes()
         self.supports = ["custom_nodes_from_web"]
@@ -102,6 +103,7 @@ class PromptServer():
 
         self.on_prompt_handlers = []
 
+        # NOTE:根据client_id查看任务执行到那个节点了
         @routes.get('/ws')
         async def websocket_handler(request):
             ws = web.WebSocketResponse()
@@ -240,6 +242,7 @@ class PromptServer():
             else:
                 return web.Response(status=400)
 
+        # NOTE: 上传图片的URL
         @routes.post("/upload/image")
         async def upload_image(request):
             post = await request.post()
@@ -499,6 +502,7 @@ class PromptServer():
             queue_info['queue_pending'] = current_queue[1]
             return web.json_response(queue_info)
 
+        # NOTE: 图片生成的prompt URL
         @routes.post("/prompt")
         async def post_prompt(request):
             logging.info("got prompt")
@@ -507,6 +511,8 @@ class PromptServer():
             json_data =  await request.json()
             json_data = self.trigger_on_prompt(json_data)
 
+            # NOTE: number属于返回的参数呀 number, prompt_id, node_errors
+            # number是当前任务的序号，可用于后续获取需要等待任务数的计算
             if "number" in json_data:
                 number = float(json_data['number'])
             else:
@@ -517,6 +523,7 @@ class PromptServer():
 
                 self.number += 1
 
+            # NOTE: 这儿是输入: client_id, prompt
             if "prompt" in json_data:
                 prompt = json_data["prompt"]
                 valid = execution.validate_prompt(prompt)
@@ -527,9 +534,12 @@ class PromptServer():
                 if "client_id" in json_data:
                     extra_data["client_id"] = json_data["client_id"]
                 if valid[0]:
+                    # NOTE: 为当前的任务创建一个任务ID
                     prompt_id = str(uuid.uuid4())
                     outputs_to_execute = valid[2]
+                    # NOTE: 将当前的任务加入到comfyui队列中
                     self.prompt_queue.put((number, prompt_id, prompt, extra_data, outputs_to_execute))
+                    # NOTE: 任务通过prompt提交到comfyui的队列之后，会返回一个任务提交的反馈，然后等待队列执行
                     response = {"prompt_id": prompt_id, "number": number, "node_errors": valid[3]}
                     return web.json_response(response)
                 else:
@@ -648,6 +658,7 @@ class PromptServer():
         return prompt_info
 
     async def send(self, event, data, sid=None):
+        # NOTE: ohhh，可以直接返回图片
         if event == BinaryEventTypes.UNENCODED_PREVIEW_IMAGE:
             await self.send_image(data, sid=sid)
         elif isinstance(data, (bytes, bytearray)):

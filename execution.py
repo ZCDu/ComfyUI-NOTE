@@ -451,6 +451,7 @@ class PromptExecutor:
             }
             self.add_message("execution_error", mes, broadcast=False)
 
+    # NOTE: 读取队列中的任务，并执行
     def execute(self, prompt, prompt_id, extra_data={}, execute_outputs=[]):
         nodes.interrupt_processing(False)
 
@@ -491,6 +492,7 @@ class PromptExecutor:
                     self.handle_execution_error(prompt_id, dynamic_prompt.original_prompt, current_outputs, executed, error, ex)
                     break
 
+                # NOTE: 这儿应该就是执行节点
                 result, error, ex = execute(self.server, dynamic_prompt, self.caches, node_id, extra_data, executed, prompt_id, execution_list, pending_subgraph_results)
                 self.success = result != ExecutionResult.FAILURE
                 if result == ExecutionResult.FAILURE:

@@ -2059,6 +2059,7 @@ def init_builtin_extra_nodes():
     Returns:
         None
     """
+    # NOTE: 默认要加载的节点，这些节点在comfy_extras文件夹下
     extras_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "comfy_extras")
     extras_files = [
         "nodes_latent.py",

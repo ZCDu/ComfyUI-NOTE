@@ -101,6 +101,7 @@ def cuda_malloc_warning():
             logging.warning("\nWARNING: this card most likely does not support cuda-malloc, if you get \"CUDA error\" please run ComfyUI with: --disable-cuda-malloc\n")
 
 def prompt_worker(q, server):
+    # NOTE: e是执行模块
     e = execution.PromptExecutor(server, lru_size=args.cache_lru)
     last_gc_collect = 0
     need_gc = False
@@ -111,6 +112,7 @@ def prompt_worker(q, server):
         if need_gc:
             timeout = max(gc_collect_interval - (current_time - last_gc_collect), 0.0)
 
+        # NOTE: q是execution.PromptQueue
         queue_item = q.get(timeout=timeout)
         if queue_item is not None:
             item, item_id = queue_item
@@ -197,6 +199,7 @@ def load_extra_path_config(yaml_path):
                 folder_paths.add_model_folder_path(x, full_path)
 
 
+# NOTE: 作为脚本执行的入口
 if __name__ == "__main__":
     if args.temp_directory:
         temp_dir = os.path.join(os.path.abspath(args.temp_directory), "temp")
@@ -211,11 +214,13 @@ if __name__ == "__main__":
         except:
             pass
 
+    # NOTE: 使用asyncio实现异步
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     server = server.PromptServer(loop)
     q = execution.PromptQueue(server)
 
+    # NOTE: 如果额外模型路径的配置文件存在，则读取起配置作为最终的模型路径配置
     extra_model_paths_config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "extra_model_paths.yaml")
     if os.path.isfile(extra_model_paths_config_path):
         load_extra_path_config(extra_model_paths_config_path)
@@ -224,6 +229,7 @@ if __name__ == "__main__":
         for config_path in itertools.chain(*args.extra_model_paths_config):
             load_extra_path_config(config_path)
 
+    # NOTE: 加载默认必要的节点
     nodes.init_extra_nodes(init_custom_nodes=not args.disable_all_custom_nodes)
 
     cuda_malloc_warning()
@@ -231,6 +237,7 @@ if __name__ == "__main__":
     server.add_routes()
     hijack_progress(server)
 
+    # NOTE: 使用多线程的方式运行
     threading.Thread(target=prompt_worker, daemon=True, args=(q, server,)).start()
 
     if args.output_directory:
