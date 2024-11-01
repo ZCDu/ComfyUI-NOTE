@@ -1531,6 +1531,7 @@ class PreviewImage(SaveImage):
                 "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
                 }
 
+# NOTE: 加载图片的node节点
 class LoadImage:
     @classmethod
     def INPUT_TYPES(s):
@@ -1596,6 +1597,7 @@ class LoadImage:
             m.update(f.read())
         return m.digest().hex()
 
+    # FIX: LoadImage会去验证图片是否存在, 这个方法到底是在什么时候使用的
     @classmethod
     def VALIDATE_INPUTS(s, image):
         if not folder_paths.exists_annotated_filepath(image):

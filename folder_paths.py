@@ -9,6 +9,7 @@ supported_pt_extensions: set[str] = {'.ckpt', '.pt', '.bin', '.pth', '.safetenso
 
 folder_names_and_paths: dict[str, tuple[list[str], set[str]]] = {}
 
+# NOTE: 通过获取当前文件的绝对路径，然后拼接出父路径，避免路径问题
 base_path = os.path.dirname(os.path.realpath(__file__))
 models_dir = os.path.join(base_path, "models")
 folder_names_and_paths["checkpoints"] = ([os.path.join(models_dir, "checkpoints")], supported_pt_extensions)
@@ -39,6 +40,7 @@ folder_names_and_paths["classifiers"] = ([os.path.join(models_dir, "classifiers"
 
 output_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), "output")
 temp_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), "temp")
+# NOTE: 上传的图片会存储到当前文件的input文件夹里
 input_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), "input")
 user_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), "user")
 

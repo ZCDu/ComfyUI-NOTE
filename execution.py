@@ -751,6 +751,8 @@ def full_type_name(klass):
         return klass.__qualname__
     return module + '.' + klass.__qualname__
 
+
+# FIX: 好像有问题, 会对输入prmopt进行验证，但是prompt并没有找到这个class_type，但是有type
 def validate_prompt(prompt):
     outputs = set()
     for x in prompt:

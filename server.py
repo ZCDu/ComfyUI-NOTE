@@ -119,6 +119,7 @@ class PromptServer():
 
             try:
                 # Send initial state to the new client
+                # NOTE: status, executing这些状态是这里生成的，不是各个节点
                 await self.send("status", { "status": self.get_queue_info(), 'sid': sid }, sid)
                 # On reconnect if we are the currently executing client send the current node
                 if self.client_id == sid and self.last_node_id is not None:
@@ -242,13 +243,14 @@ class PromptServer():
             else:
                 return web.Response(status=400)
 
-        # NOTE: 上传图片的URL
+        # NOTE: 上传图片的api
         @routes.post("/upload/image")
         async def upload_image(request):
             post = await request.post()
             return image_upload(post)
 
 
+        # NOTE: 上传mask的api
         @routes.post("/upload/mask")
         async def upload_mask(request):
             post = await request.post()
@@ -489,6 +491,7 @@ class PromptServer():
                 max_items = int(max_items)
             return web.json_response(self.prompt_queue.get_history(max_items=max_items))
 
+        # NOTE: get history用于在ws监听发现任务结束后，去获取对应的图片
         @routes.get("/history/{prompt_id}")
         async def get_history(request):
             prompt_id = request.match_info.get("prompt_id", None)
@@ -578,6 +581,7 @@ class PromptServer():
                 self.prompt_queue.set_flag("free_memory", free_memory)
             return web.Response(status=200)
 
+        # NOTE: post history通过参数可以直接在获取图片之后删除对应的图片内容
         @routes.post("/history")
         async def post_history(request):
             json_data =  await request.json()
@@ -658,7 +662,7 @@ class PromptServer():
         return prompt_info
 
     async def send(self, event, data, sid=None):
-        # NOTE: ohhh，可以直接返回图片
+        # NOTE: 只有2种状态，preview_image和未编码的图像,后者会转换后调用前者
         if event == BinaryEventTypes.UNENCODED_PREVIEW_IMAGE:
             await self.send_image(data, sid=sid)
         elif isinstance(data, (bytes, bytearray)):
@@ -675,6 +679,7 @@ class PromptServer():
         message.extend(data)
         return message
 
+    # NOTE: 这里是将图片从字节流转换为图片
     async def send_image(self, image_data, sid=None):
         image_type = image_data[0]
         image = image_data[1]
@@ -700,6 +705,7 @@ class PromptServer():
         await self.send_bytes(BinaryEventTypes.PREVIEW_IMAGE, preview_bytes, sid=sid)
 
     async def send_bytes(self, event, data, sid=None):
+        # NOTE: event就是各个节点的id
         message = self.encode_bytes(event, data)
 
         if sid is None:
@@ -710,6 +716,7 @@ class PromptServer():
             await send_socket_catch_exception(self.sockets[sid].send_bytes, message)
 
     async def send_json(self, event, data, sid=None):
+        # NOTE: event只有2终状态
         message = {"type": event, "data": data}
 
         if sid is None:
