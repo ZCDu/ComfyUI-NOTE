@@ -452,6 +452,7 @@ class PromptExecutor:
             self.add_message("execution_error", mes, broadcast=False)
 
     # NOTE: 读取队列中的任务，并执行
+    # prompt就是输入的那一大串工作流的配置玩意
     def execute(self, prompt, prompt_id, extra_data={}, execute_outputs=[]):
         nodes.interrupt_processing(False)
 
@@ -461,6 +462,7 @@ class PromptExecutor:
             self.server.client_id = None
 
         self.status_messages = []
+        # NOTE： add_message发送的信息应该就是执行的中间状态信息
         self.add_message("execution_start", { "prompt_id": prompt_id}, broadcast=False)
 
         with torch.inference_mode():

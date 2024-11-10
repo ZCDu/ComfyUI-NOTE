@@ -4,12 +4,12 @@ import os
 import time
 import logging
 from collections.abc import Collection
-
+# NOTE：支持的所有模型后缀
 supported_pt_extensions: set[str] = {'.ckpt', '.pt', '.bin', '.pth', '.safetensors', '.pkl', '.sft'}
 
 folder_names_and_paths: dict[str, tuple[list[str], set[str]]] = {}
 
-# NOTE: 通过获取当前文件的绝对路径，然后拼接出父路径，避免路径问题
+# NOTE: 通过获取当前文件的绝对路径，然后拼接出父路径，避免路径问题，所有模型和输入输出的路径都是基于这个路径的
 base_path = os.path.dirname(os.path.realpath(__file__))
 models_dir = os.path.join(base_path, "models")
 folder_names_and_paths["checkpoints"] = ([os.path.join(models_dir, "checkpoints")], supported_pt_extensions)

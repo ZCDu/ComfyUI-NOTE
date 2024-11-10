@@ -7,8 +7,9 @@ import folder_paths
 import time
 from comfy.cli_args import args
 
-
+# NOTE：加载custom_nodes下的所有自定义节点
 def execute_prestartup_script():
+    # NOTE：这种执行特定脚本的方式可以学习一下
     def execute_script(script_path):
         module_name = os.path.splitext(script_path)[0]
         try:
@@ -32,9 +33,10 @@ def execute_prestartup_script():
             module_path = os.path.join(custom_node_path, possible_module)
             if os.path.isfile(module_path) or module_path.endswith(".disabled") or module_path == "__pycache__":
                 continue
-
+            # NOTE：获取custom_nodes文件中的prestartup_script.py做启动准备
             script_path = os.path.join(module_path, "prestartup_script.py")
             if os.path.exists(script_path):
+                # PREF: 这种计时方式可以偷一下
                 time_before = time.perf_counter()
                 success = execute_script(script_path)
                 node_prestartup_times.append((time.perf_counter() - time_before, module_path, success))
@@ -113,6 +115,7 @@ def prompt_worker(q, server):
             timeout = max(gc_collect_interval - (current_time - last_gc_collect), 0.0)
 
         # NOTE: q是execution.PromptQueue
+        # 未超时的情况下，从PromptQueue中获取任务
         queue_item = q.get(timeout=timeout)
         if queue_item is not None:
             item, item_id = queue_item
@@ -199,8 +202,9 @@ def load_extra_path_config(yaml_path):
                 folder_paths.add_model_folder_path(x, full_path)
 
 
-# NOTE: 作为脚本执行的入口
+# NOTE: 作为脚本执行的入口，但是上面还有一些准备的操作
 if __name__ == "__main__":
+    # NOTE：temp_directory在folder_paths里有配置
     if args.temp_directory:
         temp_dir = os.path.join(os.path.abspath(args.temp_directory), "temp")
         logging.info(f"Setting temp directory to: {temp_dir}")
@@ -224,7 +228,7 @@ if __name__ == "__main__":
     extra_model_paths_config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "extra_model_paths.yaml")
     if os.path.isfile(extra_model_paths_config_path):
         load_extra_path_config(extra_model_paths_config_path)
-
+    # NOTE: 允许额外的模型配置文件自定义位置，不需要一定在当前目录下
     if args.extra_model_paths_config:
         for config_path in itertools.chain(*args.extra_model_paths_config):
             load_extra_path_config(config_path)
